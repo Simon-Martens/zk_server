@@ -7,6 +7,7 @@ read_timeout = 5
 write_timeout = 5
 log = "normal"
 limits = { forms = 32768 }
+secret_pw = 86c12ba6737d0873c383445f01db4c6c691579efc0110dd4537bc34b7f5e3e6d
 
 [staging]
 address = "0.0.0.0"
