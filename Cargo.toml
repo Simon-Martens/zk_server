@@ -15,7 +15,12 @@ jsonwebtoken = "7.2.0"
 crypto-hashes = "0.9"
 hmac = "0.11"
 chrono = "0.4"
+grep = "0.2"
+
 [dependencies.rocket_contrib]
 version = "0.4.10"
 default-features = false
 features = ["json"]
+
+[dependencies.flate2]
+version = "0.2"
