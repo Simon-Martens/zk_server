@@ -1,0 +1,12 @@
+# true, if this runs as a CORS API only. If true, ZK will host no static files and will allow CORS headers.
+cors = false
+# must be set, if cors = true. URL where the application is hosted
+cors_origin = "http://localhost:8080"
+# Location of static files to serve if cors = false
+static_files_location = "/home/simon/repos/zk_vue/dist/"
+# Location o the user repositories
+repo_files_location = "/home/simon/repos/notes/"
+# Hostname of the server
+hostname = "localhost"
+# Start password for the "admin" user
+admin_password = "wolfgang"

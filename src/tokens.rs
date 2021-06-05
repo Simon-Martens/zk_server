@@ -1,24 +1,31 @@
-use jsonwebtoken::encode;
-use jsonwebtoken::decode;
-use jsonwebtoken::TokenData;
-use jsonwebtoken::EncodingKey;
-use jsonwebtoken::DecodingKey;
-use jsonwebtoken::Validation;
-use jsonwebtoken::Header;
-use rocket::State;
-use crate::state::Consts;
-use crate::state::ApiKey;
 use crate::serializables::Claims;
+use crate::state::ApiKey;
+use crate::state::ZKConfig;
+use jsonwebtoken::decode;
+use jsonwebtoken::encode;
+use jsonwebtoken::DecodingKey;
+use jsonwebtoken::EncodingKey;
+use jsonwebtoken::Header;
+use jsonwebtoken::TokenData;
+use jsonwebtoken::Validation;
+use rocket::State;
 
-pub(crate) fn issue_token(claims: Claims, key: &ApiKey) -> Result<String, jsonwebtoken::errors::Error> {
+pub(crate) fn issue_token(
+    claims: Claims,
+    key: &ApiKey,
+) -> Result<String, jsonwebtoken::errors::Error> {
     encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(&key.0.clone().into_bytes())
+        &EncodingKey::from_secret(&key.0.clone().into_bytes()),
     )
 }
 
-pub(crate) fn validate_token(token: &String, key: &ApiKey, consts: State<Consts>) ->  Result<TokenData<Claims>, jsonwebtoken::errors::Error>  {
+pub(crate) fn validate_token(
+    token: &String,
+    key: &ApiKey,
+    consts: &State<ZKConfig>,
+) -> Result<TokenData<Claims>, jsonwebtoken::errors::Error> {
     let mut validation = Validation {
         leeway: 180,
         validate_nbf: true,
@@ -26,7 +33,11 @@ pub(crate) fn validate_token(token: &String, key: &ApiKey, consts: State<Consts>
         iss: Some(consts.hostname.to_string()), // TODO: IP-ADRESSE
         ..Default::default()
     };
-    decode(&token, &DecodingKey::from_secret(&key.0.clone().into_bytes()), &validation)
+    decode(
+        &token,
+        &DecodingKey::from_secret(&key.0.clone().into_bytes()),
+        &validation,
+    )
 }
 
 pub(crate) mod jwt_numeric_date {

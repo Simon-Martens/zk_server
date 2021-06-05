@@ -1,7 +1,7 @@
 #[derive(Debug, Deserialize)]
 pub(crate) struct AuthAttempt {
     pub(crate) username: String,
-    pub(crate) password: String
+    pub(crate) password: String,
 }
 
 // #[derive(Debug, Deserialize)]

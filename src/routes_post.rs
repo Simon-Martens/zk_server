@@ -1,50 +1,77 @@
-use std::path::PathBuf;
+use crate::deserializables::AuthAttempt;
+use crate::responders::ApiResponse;
+use crate::serializables::Claims;
+use crate::serializables::DataType;
+use crate::serializables::ResponseBodyGeneric;
+use crate::state::ApiKey;
+use crate::state::ZKConfig;
+use crate::tokens::issue_token;
 use rocket::http::Cookie;
 use rocket::http::Cookies;
 use rocket::http::Status;
 use rocket::State;
 use rocket_contrib::json::Json;
-use crate::state::ApiKey;
-use crate::state::Consts;
-use crate::responders::ApiResponse;
-use crate::deserializables::AuthAttempt;
-use crate::serializables::Claims;
-use crate::tokens::issue_token;
-use crate::serializables::ResponseBodyGeneric;
+use std::path::Path;
+use std::path::PathBuf;
 
-#[post("/api", format="json", data="<message>")] 
-pub(crate) fn login_mainpage(message: Json<AuthAttempt>, mut cookies: Cookies, apikey: State<ApiKey>, consts: State<Consts>) -> ApiResponse {
-    if message.password == consts.password {
+// All routes mounted at api base Path
+
+#[post("/", format = "json", data = "<message>")]
+pub(crate) fn login_mainpage(
+    message: Json<AuthAttempt>,
+    mut cookies: Cookies,
+    apikey: State<ApiKey>,
+    consts: State<ZKConfig>,
+) -> ApiResponse {
+    let mut path = PathBuf::new();
+    path.push(&consts.repo_files_location);
+    path.push(&message.username);
+    if message.password == consts.admin_password && path.exists() && path.is_dir() {
         cookies.add_private(Cookie::new(
-            "jwt", 
-            issue_token(Claims::new(message.username.clone(), consts), apikey.inner()).unwrap())
-        );
-        ApiResponse {
-            status: Status::Ok,
-            json: ResponseBodyGeneric::lazy(json!({"status": "ok"}))
-        }
+            "jwt",
+            issue_token(
+                Claims::new(message.username.as_str(), &consts),
+                apikey.inner(),
+            )
+            .unwrap(),
+        ));
+        let res = ResponseBodyGeneric::empty(
+            "/",
+            &apikey,
+            &Claims::new(message.username.as_str(), &consts),
+        )
+        .inner(json!({"status": "ok"}), DataType::Ignore);
+        ApiResponse::ok(res.json())
     } else {
-        ApiResponse {
-            status: Status::Forbidden,
-            json: ResponseBodyGeneric::lazy(json!({"status": "bad username/password"}))
-        }
+        ApiResponse::unauthorized("Bad username/password.")
     }
 }
 
-#[post("/api/<path..>", format="json", data="<message>")]
-pub(crate) fn login(path: PathBuf, message: Json<AuthAttempt>, mut cookies: Cookies, apikey: State<ApiKey>, consts: State<Consts>) -> ApiResponse {
-    if message.password == consts.password {
+#[post("/<path..>", format = "json", data = "<message>")]
+pub(crate) fn login(
+    path: PathBuf,
+    message: Json<AuthAttempt>,
+    mut cookies: Cookies,
+    apikey: State<ApiKey>,
+    consts: State<ZKConfig>,
+) -> ApiResponse {
+    if message.password == consts.admin_password {
         cookies.add_private(Cookie::new(
-            "jwt", 
-            issue_token(Claims::new(message.username.clone(), consts), apikey.inner()).unwrap()));
-        ApiResponse {
-            status: Status::Ok,
-            json: ResponseBodyGeneric::lazy(json!({"status": "ok"}))
-        }
+            "jwt",
+            issue_token(
+                Claims::new(message.username.as_str(), &consts),
+                apikey.inner(),
+            )
+            .unwrap(),
+        ));
+        let res = ResponseBodyGeneric::empty(
+            path.to_str().unwrap(),
+            &apikey,
+            &Claims::new(message.username.as_str(), &consts),
+        )
+        .inner(json!({"status": "ok"}), DataType::Ignore);
+        ApiResponse::ok(res.json())
     } else {
-        ApiResponse {
-            status: Status::Forbidden,
-            json: ResponseBodyGeneric::lazy(json!({"status": "bad username/password"}))
-        }
+        ApiResponse::unauthorized("Bad username/password.")
     }
 }

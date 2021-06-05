@@ -8,4 +8,4 @@ fn calculate_id<T: Hash>(t: &T) -> u64 {
     t.hash(&mut s);
     s.write_u64(salt);
     s.finish()
-} 
+}
