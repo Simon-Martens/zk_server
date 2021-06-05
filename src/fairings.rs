@@ -104,3 +104,28 @@ impl Fairing for CORS {
             response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));     
     }
 }
+
+
+pub(crate) struct X_Frame_Options;
+
+impl Fairing for X_Frame_Options {
+    fn info(&self) -> Info {
+        Info {
+            name: "X-Frame-Options",
+            kind: Kind::Response,
+        }
+    }
+
+    fn on_response(&self, request: &Request, response: &mut Response) {
+        let headers = request.headers();
+        if headers
+            .get("Accept-Encoding")
+            .any(|e| e.to_lowercase().contains("gzip"))
+        {
+            response.set_header(Header::new(
+                "X-Frame-Options",
+                "deny",
+            ));
+        }
+    }
+}

@@ -47,3 +47,28 @@ impl<'a, 'r> FromRequest<'a, 'r> for Claims {
         }
     }
 }
+
+pub(crate) struct CSRFClaims(Claims);
+
+impl<'a, 'r> FromRequest<'a, 'r> for CSRFClaims {
+    type Error = AuthError;
+
+    fn from_request(request: &'a Request<'r>) -> Outcome<Self, Self::Error> {
+        let keys: Option<&str> = request
+            .headers()
+            .get_one("XSRF-TOKEN");
+        if keys == None {
+            return Outcome::Failure((Status::Unauthorized, AuthError::Missing));
+        }
+        let apikey = request.guard::<State<ApiKey>>();
+        let consts = request.guard::<State<ZKConfig>>();
+        let validation = validate_token(&keys.unwrap().to_string(), &apikey.unwrap(), &consts.unwrap());
+        match validation {
+            Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::JWTError(e))),
+            Ok(n) => {
+                // TODO: Check for matching route Path
+                Outcome::Success(CSRFClaims(n.claims))
+            }
+        }
+    }
+}

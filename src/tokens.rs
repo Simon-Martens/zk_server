@@ -11,12 +11,12 @@ use jsonwebtoken::Validation;
 use rocket::State;
 
 pub(crate) fn issue_token(
-    claims: Claims,
+    claims: &Claims,
     key: &ApiKey,
 ) -> Result<String, jsonwebtoken::errors::Error> {
     encode(
         &Header::default(),
-        &claims,
+        claims,
         &EncodingKey::from_secret(&key.0.clone().into_bytes()),
     )
 }

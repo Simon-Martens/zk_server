@@ -32,6 +32,8 @@ mod routes_static_get;
 mod serializables;
 mod state;
 mod tokens;
+mod filesystem_interact;
+mod git_interact;
 
 fn main() {
     rocket::ignite()
@@ -40,8 +42,8 @@ fn main() {
             routes![
                 routes_get::api,
                 routes_get::api_index,
-                routes_post::login_mainpage,
-                routes_post::login
+                routes_post::login,
+                routes_post::login_index
             ],
         )
         .attach(AdHoc::on_attach("Generate Secret", |rocket| {
@@ -54,6 +56,7 @@ fn main() {
         .attach(fairings::Gzip)
         .attach(fairings::Caching)
         .attach(fairings::XClacksOverhead)
+        .attach(fairings::X_Frame_Options)
         .launch();
 }
 

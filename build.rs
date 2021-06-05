@@ -6,6 +6,7 @@ use std::io::prelude::*;
 
 const std_cfg: &str = 
 r#"# true, if this runs as a CORS API only. If true, ZK will host no static files and will allow CORS headers, as well as OPTIONS request methods.
+# Also, see that X-Frame-Options is set to deny on all requests to avoid clickjacking attacks. Recommended are also gzip compression & cache-control practices.
 cors = false
 # must be set, if cors = true. URL where the application is hosted
 cors_origin = "http://localhost:8080"
@@ -16,7 +17,7 @@ repo_files_location = "/home/simon/repos/notes/"
 # Hostname of the server
 hostname = "localhost"
 # Start password for the "admin" user
-admin_password = "wolfgang""#;
+admin_password = "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2""#;
 
 fn main() {
     // println!("cargo:rerun-if-changed=config.json");

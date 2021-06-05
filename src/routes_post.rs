@@ -6,6 +6,8 @@ use crate::serializables::ResponseBodyGeneric;
 use crate::state::ApiKey;
 use crate::state::ZKConfig;
 use crate::tokens::issue_token;
+use crypto_hashes::sha2::{Digest, Sha256, Sha512};
+use hex_literal::hex;
 use rocket::http::Cookie;
 use rocket::http::Cookies;
 use rocket::http::Status;
@@ -17,34 +19,13 @@ use std::path::PathBuf;
 // All routes mounted at api base Path
 
 #[post("/", format = "json", data = "<message>")]
-pub(crate) fn login_mainpage(
+pub(crate) fn login_index(
     message: Json<AuthAttempt>,
     mut cookies: Cookies,
     apikey: State<ApiKey>,
     consts: State<ZKConfig>,
 ) -> ApiResponse {
-    let mut path = PathBuf::new();
-    path.push(&consts.repo_files_location);
-    path.push(&message.username);
-    if message.password == consts.admin_password && path.exists() && path.is_dir() {
-        cookies.add_private(Cookie::new(
-            "jwt",
-            issue_token(
-                Claims::new(message.username.as_str(), &consts),
-                apikey.inner(),
-            )
-            .unwrap(),
-        ));
-        let res = ResponseBodyGeneric::empty(
-            "/",
-            &apikey,
-            &Claims::new(message.username.as_str(), &consts),
-        )
-        .inner(json!({"status": "ok"}), DataType::Ignore);
-        ApiResponse::ok(res.json())
-    } else {
-        ApiResponse::unauthorized("Bad username/password.")
-    }
+    login(PathBuf::from("/"), message, cookies, apikey, consts)
 }
 
 #[post("/<path..>", format = "json", data = "<message>")]
@@ -56,22 +37,19 @@ pub(crate) fn login(
     consts: State<ZKConfig>,
 ) -> ApiResponse {
     if message.password == consts.admin_password {
+        let claims = Claims::default()
+            .set_iss(consts.hostname.as_str())
+            .set_sub(message.username.as_str())
+            .set_aud("/");
         cookies.add_private(Cookie::new(
             "jwt",
-            issue_token(
-                Claims::new(message.username.as_str(), &consts),
-                apikey.inner(),
-            )
-            .unwrap(),
+            issue_token(&claims, apikey.inner()).unwrap(),
         ));
-        let res = ResponseBodyGeneric::empty(
-            path.to_str().unwrap(),
-            &apikey,
-            &Claims::new(message.username.as_str(), &consts),
-        )
-        .inner(json!({"status": "ok"}), DataType::Ignore);
-        ApiResponse::ok(res.json())
+        let res = ResponseBodyGeneric::default()
+            .set_apiurl(path.to_str().unwrap(), &apikey, &claims)
+            .set_inner(json!({"status": "ok"}), DataType::Ignore);
+        ApiResponse::ok_json(res.json())
     } else {
-        ApiResponse::unauthorized("Bad username/password.")
+        ApiResponse::unauthorized_message("Bad username/password.")
     }
 }
