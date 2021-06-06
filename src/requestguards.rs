@@ -10,7 +10,6 @@ use rocket::request::Request;
 use rocket::State;
 use std::path::PathBuf;
 
-// TODO: Error response
 #[derive(Debug)]
 pub(crate) enum AuthError {
     Missing,

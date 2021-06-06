@@ -30,7 +30,7 @@ pub(crate) fn validate_token(
         leeway: 180,
         validate_nbf: true,
         validate_exp: true,
-        iss: Some(consts.hostname.to_string()), // TODO: IP-ADRESSE
+        iss: Some(consts.hostname.to_string()),
         ..Default::default()
     };
     decode(
