@@ -19,6 +19,7 @@ grep = "0.2"
 figment = { version = "0.10", default-features = false, features = ["toml", "env"] }
 git2 = "0.13"
 hex-literal = "0.3.1"
+filetime = "0.2"
 
 [dependencies.rocket_contrib]
 version = "0.4.10"

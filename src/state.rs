@@ -1,10 +1,13 @@
 use crypto_hashes::sha2::Sha256;
 use hmac::crypto_mac::Output;
 use hmac::Hmac;
+use std::sync::atomic::AtomicUsize;
 
 type HmacSha256 = Output<Hmac<Sha256>>;
 
 pub(crate) struct ApiKey(pub(crate) HmacSha256);
+
+// pub(crate) struct FileCount(pub(crate) AtomicUsize);
 
 #[derive(Deserialize)]
 pub(crate) struct ZKConfig {

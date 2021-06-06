@@ -1335,6 +1335,7 @@ dependencies = [
  "chrono",
  "crypto-hashes",
  "figment",
+ "filetime",
  "flate2",
  "git2",
  "grep",

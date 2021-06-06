@@ -12,13 +12,13 @@ use rocket_contrib::json::JsonValue;
 #[derive(Debug)]
 pub(crate) struct ApiResponse {
     headers: Vec<(String, String)>,
-    json: JsonValue,
+    response: ResponseBodyGeneric,
     status: Status,
 }
 
 impl<'r> Responder<'r> for ApiResponse {
     fn respond_to(self, req: &Request) -> Result<'r> {
-        let mut res = Response::build_from(self.json.respond_to(&req).unwrap())
+        let mut res = Response::build_from(self.response.json().respond_to(&req).unwrap())
             .status(self.status)
             .header(ContentType::JSON)
             .finalize();
@@ -30,35 +30,35 @@ impl<'r> Responder<'r> for ApiResponse {
 }
 
 impl ApiResponse {
-    pub(crate) fn ok_json(json: JsonValue) -> ApiResponse {
+    pub(crate) fn ok_json(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: Vec::default(),
             status: Status::Ok,
-            json,
+            response,
         }
     }
 
-    pub(crate) fn not_found_json(json: JsonValue) -> ApiResponse {
+    pub(crate) fn not_found_json(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: Vec::default(),
             status: Status::NotFound,
-            json,
+            response,
         }
     }
 
-    pub(crate) fn unauthorized_message(message: &str) -> ApiResponse {
+    pub(crate) fn unauthorized_message(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: vec![(r#"Clear-Site-Data"#.to_string(), r#""*""#.to_string())],
             status: Status::Unauthorized,
-            json: json!({ "message": message }),
+            response,
         }
     }
 
-    pub(crate) fn forbidden_message(message: &str) -> ApiResponse {
+    pub(crate) fn forbidden_message(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: vec![(r#"Clear-Site-Data"#.to_string(), r#""*""#.to_string())],
             status: Status::Forbidden,
-            json: json!({ "message": message }),
+            response,
         }
     }
 }

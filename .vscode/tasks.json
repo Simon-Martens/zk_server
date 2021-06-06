@@ -6,7 +6,7 @@
         {
             "label": "Cargo-Wacth",
             "type": "shell",
-            "command": "cargo-watch -x run",
+            "command": "cargo-watch -x run -i ZK.toml -i Rocket.toml",
             "group": "test",
             "presentation": {
                 "reveal": "always",

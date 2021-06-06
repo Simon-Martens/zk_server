@@ -106,6 +106,33 @@ pub(crate) enum DataType {
 }
 
 #[derive(Debug, Serialize)]
+pub(crate) struct AppState {
+    authorized: bool,
+    commit: Option<CommitData>,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self {
+            authorized: false,
+            commit: None,
+        }
+    }
+}
+
+impl AppState {
+    pub(crate) fn set_authorized(mut self, authorized: bool) -> Self {
+        self.authorized = authorized;
+        self
+    }
+
+    pub(crate) fn set_commit(mut self, commit: Option<CommitData>) -> Self {
+        self.commit = commit;
+        self
+    }
+}
+
+#[derive(Debug, Serialize)]
 pub(crate) struct ResponseBodyGeneric {
     token: Option<String>, // Token, used aginst XSS, must be valid for writing
     hash: String,          // Sha256-Hash of inner JSON for verification purposes
@@ -114,7 +141,7 @@ pub(crate) struct ResponseBodyGeneric {
     apiurl: String,        // Api-URL of the Request
     inner: JsonValue,      // Inner Json
     datatype: DataType,
-    appstate: Option<CommitData>, // State of the reository
+    appstate: AppState, // State of the reository
 }
 
 impl Default for ResponseBodyGeneric {
@@ -129,7 +156,7 @@ impl Default for ResponseBodyGeneric {
             inner: JsonValue::default(),
             token: None,
             apiurl: String::default(),
-            appstate: None,
+            appstate: AppState::default(),
         }
     }
 }
@@ -151,8 +178,8 @@ impl ResponseBodyGeneric {
         self
     }
 
-    pub(crate) fn set_appstate(mut self, transaction: &RepositoryTransaction) -> Self {
-        self.appstate = transaction.find_last_commit().ok();
+    pub(crate) fn set_appstate(mut self, appstate: AppState) -> Self {
+        self.appstate = appstate;
         self
     }
 
@@ -160,7 +187,7 @@ impl ResponseBodyGeneric {
         self.set_token(&apiurl, &key, &claims)
     }
 
-    pub(crate) fn set_token(mut self, apiurl: &str, key: &ApiKey, claims: &Claims) -> Self {
+    fn set_token(mut self, apiurl: &str, key: &ApiKey, claims: &Claims) -> Self {
         self.apiurl = apiurl.to_string();
         self.token = issue_token(&(claims.clone().set_aud(apiurl).set_iat_exp_nbf(12)), key).ok();
         self

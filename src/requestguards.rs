@@ -14,7 +14,10 @@ use std::path::PathBuf;
 #[derive(Debug)]
 pub(crate) enum AuthError {
     Missing,
+    WrongUsernamePassword,
     UsernameInvalidated,
+    PathTraversalAttempt,
+    CSRFError(Error),
     JWTError(Error),
 }
 
@@ -35,14 +38,16 @@ impl<'a, 'r> FromRequest<'a, 'r> for Claims {
         match validation {
             Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::JWTError(e))),
             Ok(n) => {
+                if n.claims.get_sub().is_empty() || PathBuf::from(n.claims.get_sub()).is_absolute() {
+                    return Outcome::Failure((Status::Forbidden, AuthError::PathTraversalAttempt));
+                }
                 let cfg = request.guard::<State<ZKConfig>>().unwrap();
                 let mut path = PathBuf::from(&cfg.repo_files_location);
                 path.push(n.claims.get_sub());
                 if !path.exists() {
-                    Outcome::Failure((Status::Forbidden, AuthError::UsernameInvalidated))
-                } else {
-                    Outcome::Success(n.claims)
-                }
+                    return Outcome::Failure((Status::Forbidden, AuthError::UsernameInvalidated));
+                } 
+                Outcome::Success(n.claims)
             }
         }
     }
@@ -64,7 +69,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for CSRFClaims {
         let consts = request.guard::<State<ZKConfig>>();
         let validation = validate_token(&keys.unwrap().to_string(), &apikey.unwrap(), &consts.unwrap());
         match validation {
-            Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::JWTError(e))),
+            Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::CSRFError(e))),
             Ok(n) => {
                 // TODO: Check for matching route Path
                 Outcome::Success(CSRFClaims(n.claims))
