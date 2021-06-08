@@ -6,6 +6,8 @@ use std::io::prelude::*;
 
 const std_cfg: &str = 
 r#"# Config File, generated at build time.
+# Path to serve the API on (server name & port is set in Rocket.toml)
+path = "/api"
 # true, if this runs as a CORS API only. If true, ZK will host no static files and will allow CORS headers, as well as OPTIONS request methods.
 # Also, see that X-Frame-Options is set to deny on all requests to avoid clickjacking attacks. Recommended are also gzip compression & cache-control & CSRF practices.
 cors = false
