@@ -30,7 +30,7 @@ impl<'r> Responder<'r> for ApiResponse {
 }
 
 impl ApiResponse {
-    pub(crate) fn ok_json(response: ResponseBodyGeneric) -> ApiResponse {
+    pub(crate) fn ok(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: Vec::default(),
             status: Status::Ok,
@@ -38,7 +38,7 @@ impl ApiResponse {
         }
     }
 
-    pub(crate) fn not_found_json(response: ResponseBodyGeneric) -> ApiResponse {
+    pub(crate) fn not_found(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: Vec::default(),
             status: Status::NotFound,
@@ -46,7 +46,7 @@ impl ApiResponse {
         }
     }
 
-    pub(crate) fn unauthorized_message(response: ResponseBodyGeneric) -> ApiResponse {
+    pub(crate) fn unauthorized(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: vec![(r#"Clear-Site-Data"#.to_string(), r#""*""#.to_string())],
             status: Status::Unauthorized,
@@ -54,7 +54,7 @@ impl ApiResponse {
         }
     }
 
-    pub(crate) fn forbidden_message(response: ResponseBodyGeneric) -> ApiResponse {
+    pub(crate) fn forbidden(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: vec![(r#"Clear-Site-Data"#.to_string(), r#""*""#.to_string())],
             status: Status::Forbidden,

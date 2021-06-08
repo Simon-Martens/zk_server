@@ -4,10 +4,12 @@ use crate::state::ZKConfig;
 use crate::tokens::validate_token;
 use jsonwebtoken::errors::Error;
 use rocket::http::Status;
+use rocket::http::uri::Segments;
 use rocket::request::FromRequest;
 use rocket::request::Outcome;
 use rocket::request::Request;
 use rocket::State;
+use rocket::request::FromSegments;
 use std::path::PathBuf;
 
 #[derive(Debug)]
@@ -37,7 +39,8 @@ impl<'a, 'r> FromRequest<'a, 'r> for Claims {
         match validation {
             Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::JWTError(e))),
             Ok(n) => {
-                if n.claims.get_sub().is_empty() || PathBuf::from(n.claims.get_sub()).is_absolute() {
+                if n.claims.get_sub().is_empty() || PathBuf::from(n.claims.get_sub()).is_absolute()
+                {
                     return Outcome::Failure((Status::Forbidden, AuthError::PathTraversalAttempt));
                 }
                 let cfg = request.guard::<State<ZKConfig>>().unwrap();
@@ -45,7 +48,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Claims {
                 path.push(n.claims.get_sub());
                 if !path.exists() {
                     return Outcome::Failure((Status::Forbidden, AuthError::UsernameInvalidated));
-                } 
+                }
                 Outcome::Success(n.claims)
             }
         }
@@ -58,15 +61,17 @@ impl<'a, 'r> FromRequest<'a, 'r> for CSRFClaims {
     type Error = AuthError;
 
     fn from_request(request: &'a Request<'r>) -> Outcome<Self, Self::Error> {
-        let keys: Option<&str> = request
-            .headers()
-            .get_one("XSRF-TOKEN");
+        let keys: Option<&str> = request.headers().get_one("XSRF-TOKEN");
         if keys == None {
             return Outcome::Failure((Status::Unauthorized, AuthError::Missing));
         }
         let apikey = request.guard::<State<ApiKey>>();
         let consts = request.guard::<State<ZKConfig>>();
-        let validation = validate_token(&keys.unwrap().to_string(), &apikey.unwrap(), &consts.unwrap());
+        let validation = validate_token(
+            &keys.unwrap().to_string(),
+            &apikey.unwrap(),
+            &consts.unwrap(),
+        );
         match validation {
             Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::CSRFError(e))),
             Ok(n) => {

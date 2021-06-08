@@ -6,75 +6,89 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
-#[derive(Serialize)]
-pub(crate) struct DirectoryEntries {
-    head: DirectoryEntry,
-    mds: Vec<DirectoryEntry>,
-    dirs: Vec<DirectoryEntry>,
-}
+use rocket::State;
+use rocket_contrib::json::JsonValue;
+
+use crate::state::ZKConfig;
 
 #[derive(Serialize)]
+pub(crate) struct Directory {
+    head: Entry,
+    mds: Vec<Entry>,
+    dirs: Vec<Entry>,
+}
+
+ 
+#[derive(Serialize, Deserialize)]
 pub(crate) enum FType {
     MDFile,
-    Directory
+    Directory,
 }
 
 #[derive(Serialize)]
-pub(crate) struct DirectoryEntry {
-    name: String,
-    #[serde(with = "dir_entry_serialization")]
-    path: PathBuf,
-    ftype: FType,
+pub(crate) struct Entry {
+    pub(crate) name: String,
+    #[serde(with = "entry_serialization")]
+    pub(crate) data: PathBuf,
+    pub(crate) ftype: FType,
+    pub(crate) url: PathBuf,
 }
 
-pub(crate) fn get_all_directory(p: DirectoryEntry, hidden: bool) -> io::Result<DirectoryEntries> {
-    let mut mds: Vec<DirectoryEntry> = Vec::new();
-    let mut dirs: Vec<DirectoryEntry> = Vec::new();
-    for entry in read_dir(&p.path)?
+impl Entry {
+    pub(crate) fn json(&self) -> JsonValue {
+        json!(self)
+    }
+}
+
+impl Directory {
+    pub(crate) fn json(&self) -> JsonValue {
+        json!(self)
+    }
+}
+
+pub(crate) fn ls(entry: Entry, basepath: &PathBuf, hidden: bool, filter: &str) -> io::Result<Directory> {
+    let mut mds: Vec<Entry> = Vec::new();
+    let mut dirs: Vec<Entry> = Vec::new();
+    for entry in read_dir(&entry.data)?
         .filter(|e| e.is_ok())
         .filter_map(|e| e.ok())
         .filter(|e| !(is_hidden(&e) ^ hidden))
     {
-        let path = entry.path();
-        let filename = path
-            .file_stem()
-            .unwrap_or_default()
-            .to_str()
-            .unwrap_or_default()
-            .to_string();
-        match path {
-            e if e.is_dir() => dirs.push(DirectoryEntry {
-                path: e,
-                name: filename,
-                ftype: FType::Directory
-            }),
-            e if e.extension().unwrap_or_default() == "md" => mds.push(DirectoryEntry {
-                path: e,
-                name: filename,
-                ftype: FType::MDFile
-            }),
-            _ => continue,
-        };
+        let mut path = entry.path();
+        if let Some(e) = open(&path.strip_prefix(&basepath).unwrap().to_path_buf(), &basepath) {
+            match e.ftype {
+                FType::MDFile => mds.push(e),
+                FType::Directory => dirs.push(e),
+            }
+        }
     }
-    Ok(DirectoryEntries {
-        head: p,
-        mds,
-        dirs
-    })
+    Ok(Directory { head: entry, mds, dirs })
 }
 
-pub(crate) fn get_file(path: PathBuf) -> io::Result<DirectoryEntry> {
+pub(crate) fn open(url: &PathBuf, basepath: &PathBuf) -> Option<Entry> {
+    let mut path: PathBuf = basepath.clone();
+    path.push(url);
     let filename = path
         .file_name()
         .unwrap_or_default()
         .to_str()
         .unwrap_or_default()
         .to_string();
-    Ok(DirectoryEntry {
-        ftype: if path.is_dir() { FType::Directory } else { FType::MDFile },
-        path: path,
-        name: filename,
-    })
+    match path {
+        e if e.is_dir() => Some(Entry {
+            data: e,
+            name: filename,
+            ftype: FType::Directory,
+            url: url.clone()
+        }),
+        e if e.is_file() && e.extension().unwrap_or_default() == "md" => Some(Entry {
+            data: e,
+            name: filename,
+            ftype: FType::MDFile,
+            url: url.clone()
+        }),
+        _ => None,
+    }
 }
 
 fn is_hidden(entry: &DirEntry) -> bool {
@@ -91,7 +105,7 @@ fn is_hidden(entry: &DirEntry) -> bool {
     }
 }
 
-mod dir_entry_serialization {
+mod entry_serialization {
     use chrono::Date;
     use filetime::set_file_atime;
     use filetime::FileTime;

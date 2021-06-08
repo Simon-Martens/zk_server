@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use rocket::State;
 
 use crate::requestguards::AuthError;
+use crate::requestguards::CSRFClaims;
 use crate::responders::ApiResponse;
 use crate::serializables::Claims;
 use crate::serializables::DataType;
@@ -22,11 +23,21 @@ fn calculate_id<T: Hash>(t: &T) -> u64 {
     s.finish()
 }
 
+pub(crate) fn check_claims_csrf<'a>(claims: &'a Result<Claims, AuthError>, csrf: Option<&'a Result<CSRFClaims, AuthError>>) -> Option<&'a AuthError> {
+    if claims.is_err() {
+        claims.as_ref().err().into()
+    } else if csrf.is_some() && csrf.unwrap().is_err() {
+        csrf.unwrap().as_ref().err().into()
+    } else {
+        None
+    }
+}
+
 pub(crate) fn handle_jwt_error(
     path: PathBuf,
     consts: State<ZKConfig>,
     key: State<ApiKey>,
-    error: AuthError,
+    error: &AuthError,
 ) -> ApiResponse {
     // TODO MATCH MESSAGE TO AUTH ERROR
     let mut res = ResponseBodyGeneric::default().set_apiurl(
@@ -56,5 +67,5 @@ pub(crate) fn handle_jwt_error(
             DataType::ErrorMessage,
         ),
     };
-    ApiResponse::unauthorized_message(res)
+    ApiResponse::unauthorized(res)
 }

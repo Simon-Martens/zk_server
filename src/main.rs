@@ -22,7 +22,9 @@ use rocket::fairing::AdHoc;
 
 mod deserializables;
 mod fairings;
+mod filesystem_interact;
 mod functions;
+mod git_interact;
 mod requestguards;
 mod responders;
 mod routes_catchers;
@@ -30,11 +32,12 @@ mod routes_get;
 mod routes_options;
 mod routes_post;
 mod routes_static_get;
+mod routes_patch;
+mod routes_delete;
+mod routes_put;
 mod serializables;
 mod state;
 mod tokens;
-mod filesystem_interact;
-mod git_interact;
 
 fn main() {
     rocket::ignite()
@@ -43,8 +46,8 @@ fn main() {
             routes![
                 routes_get::api,
                 routes_get::api_index,
-                routes_post::login,
-                routes_post::login_index
+                routes_post::auth,
+                routes_post::auth_index
             ],
         )
         .attach(AdHoc::on_attach("Generate Secret", |rocket| {

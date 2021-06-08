@@ -8,6 +8,7 @@ use chrono::DateTime;
 use chrono::Duration;
 use chrono::Timelike;
 use chrono::Utc;
+use chrono::Local;
 use crypto_hashes::sha2::{Digest, Sha256, Sha512};
 use rand::random;
 use rocket::State;
@@ -108,6 +109,7 @@ pub(crate) enum DataType {
 #[derive(Debug, Serialize)]
 pub(crate) struct AppState {
     authorized: bool,
+    time: String,
     commit: Option<CommitData>,
 }
 
@@ -116,6 +118,7 @@ impl Default for AppState {
         Self {
             authorized: false,
             commit: None,
+            time: Local::now().to_rfc2822(),
         }
     }
 }
