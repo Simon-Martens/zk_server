@@ -1,7 +1,5 @@
 use crate::git_interact::CommitData;
-use crate::git_interact::RepositoryTransaction;
 use crate::state::ApiKey;
-use crate::state::ZKConfig;
 use crate::tokens::issue_token;
 use crate::tokens::jwt_numeric_date;
 use chrono::DateTime;
@@ -9,12 +7,9 @@ use chrono::Duration;
 use chrono::Timelike;
 use chrono::Utc;
 use chrono::Local;
-use crypto_hashes::sha2::{Digest, Sha256, Sha512};
-use rand::random;
-use rocket::State;
+use crypto_hashes::sha2::{Digest, Sha256};
 use rocket_contrib::json::JsonValue;
 use serde::Serialize;
-use std::hash::Hash;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(crate) struct Claims {
@@ -93,14 +88,15 @@ impl Claims {
         self.sub.clone()
     }
 
+    #[allow(unused)] //  TODO check for right aud on edits
     pub(crate) fn get_aud(&self) -> String {
         self.aud.clone()
     }
 }
+
 #[derive(Debug, Serialize)]
 pub(crate) enum DataType {
     Empty,
-    Ignore,
     ErrorMessage,
     MD,
     Directory,
@@ -129,6 +125,7 @@ impl AppState {
         self
     }
 
+    #[allow(unused)] // TODO Git Integration
     pub(crate) fn set_commit(mut self, commit: Option<CommitData>) -> Self {
         self.commit = commit;
         self
@@ -186,7 +183,7 @@ impl ResponseBodyGeneric {
         self
     }
 
-    pub(crate) fn set_apiurl(mut self, apiurl: &str, key: &ApiKey, claims: &Claims) -> Self {
+    pub(crate) fn set_apiurl(self, apiurl: &str, key: &ApiKey, claims: &Claims) -> Self {
         self.set_token(&apiurl, &key, &claims)
     }
 
@@ -199,10 +196,4 @@ impl ResponseBodyGeneric {
     pub(crate) fn json(&self) -> JsonValue {
         json!(self)
     }
-}
-
-fn rand_string() -> String {
-    (0..8)
-        .map(|_| (0x20u8 + (random::<f32>() * 96.0) as u8) as char)
-        .collect()
 }

@@ -4,12 +4,10 @@ use crate::state::ZKConfig;
 use crate::tokens::validate_token;
 use jsonwebtoken::errors::Error;
 use rocket::http::Status;
-use rocket::http::uri::Segments;
 use rocket::request::FromRequest;
 use rocket::request::Outcome;
 use rocket::request::Request;
 use rocket::State;
-use rocket::request::FromSegments;
 use std::path::PathBuf;
 
 #[derive(Debug)]

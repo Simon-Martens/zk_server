@@ -3,7 +3,6 @@ use rocket::fairing::Info;
 use rocket::fairing::Kind;
 use rocket::http::ContentType;
 use rocket::http::Header;
-use rocket::http::Status;
 use rocket::request::Request;
 use rocket::response::Response;
 
@@ -90,7 +89,7 @@ impl Fairing for CORS {
         }
     }
 
-    fn on_response(&self, request: &Request, response: &mut Response) {
+    fn on_response(&self, _: &Request, response: &mut Response) {
             response.set_header(Header::new(
                 "Access-Control-Allow-Origin",
                 self.origin.clone(),
@@ -106,9 +105,9 @@ impl Fairing for CORS {
 }
 
 
-pub(crate) struct X_Frame_Options;
+pub(crate) struct XFRameOptions;
 
-impl Fairing for X_Frame_Options {
+impl Fairing for XFRameOptions {
     fn info(&self) -> Info {
         Info {
             name: "X-Frame-Options",

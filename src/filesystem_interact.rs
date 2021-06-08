@@ -1,15 +1,9 @@
-use std::fs::metadata;
 use std::fs::read_dir;
 use std::fs::DirEntry;
-use std::fs::Metadata;
 use std::io;
-use std::path::Path;
 use std::path::PathBuf;
-
-use rocket::State;
 use rocket_contrib::json::JsonValue;
 
-use crate::state::ZKConfig;
 
 #[derive(Serialize)]
 pub(crate) struct Directory {
@@ -46,6 +40,7 @@ impl Directory {
     }
 }
 
+#[allow(unused_variables)] // TODO: Fiter implement
 pub(crate) fn ls(entry: Entry, basepath: &PathBuf, hidden: bool, filter: &str) -> io::Result<Directory> {
     let mut mds: Vec<Entry> = Vec::new();
     let mut dirs: Vec<Entry> = Vec::new();
@@ -54,7 +49,7 @@ pub(crate) fn ls(entry: Entry, basepath: &PathBuf, hidden: bool, filter: &str) -
         .filter_map(|e| e.ok())
         .filter(|e| !(is_hidden(&e) ^ hidden))
     {
-        let mut path = entry.path();
+        let path = entry.path();
         if let Some(e) = open(&path.strip_prefix(&basepath).unwrap().to_path_buf(), &basepath) {
             match e.ftype {
                 FType::MDFile => mds.push(e),
@@ -106,17 +101,15 @@ fn is_hidden(entry: &DirEntry) -> bool {
 }
 
 mod entry_serialization {
-    use chrono::Date;
     use filetime::set_file_atime;
     use filetime::FileTime;
     use serde::ser::SerializeStruct;
     use serde::{self, Serializer};
     use std::fs::metadata;
     use std::fs::read_to_string;
-    use std::fs::DirEntry;
     use std::path::PathBuf;
 
-    use chrono::prelude::{DateTime, Utc};
+    use chrono::prelude::{DateTime, Local};
     use std::time::SystemTime;
 
     pub(crate) fn serialize<S>(entry: &PathBuf, serializer: S) -> Result<S::Ok, S::Error>
@@ -133,18 +126,18 @@ mod entry_serialization {
         let t = metadata.modified().ok().map(|x| systemtime_to_string(x));
         state.serialize_field("modified", &t)?;
         if metadata.is_dir() {
-            set_file_atime(&entry, FileTime::now());
+            set_file_atime(&entry, FileTime::now()).ok();
             // TODO: Serialize Number of Items...
         } else {
             let c = read_to_string(entry).ok();
-            state.serialize_field("content", &c);
-            set_file_atime(&entry, FileTime::now());
+            state.serialize_field("content", &c)?;
+            set_file_atime(&entry, FileTime::now()).ok();
         }
         state.end()
     }
 
     fn systemtime_to_string(t: SystemTime) -> String {
-        let t: DateTime<chrono::Local> = t.into();
+        let t: DateTime<Local> = t.into();
         t.to_rfc2822()
     }
 }

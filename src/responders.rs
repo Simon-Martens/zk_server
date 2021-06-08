@@ -1,13 +1,10 @@
 use crate::serializables::ResponseBodyGeneric;
 use rocket::http::ContentType;
-use rocket::http::Header;
-use rocket::http::HeaderMap;
 use rocket::http::Status;
 use rocket::request::Request;
 use rocket::response::Responder;
 use rocket::response::Response;
 use rocket::response::Result;
-use rocket_contrib::json::JsonValue;
 
 #[derive(Debug)]
 pub(crate) struct ApiResponse {
@@ -23,7 +20,7 @@ impl<'r> Responder<'r> for ApiResponse {
             .header(ContentType::JSON)
             .finalize();
         for (header, value) in self.headers {
-            let res = res.set_raw_header(header.clone(), value.clone());
+            res.set_raw_header(header.clone(), value.clone());
         }
         Ok(res)
     }
@@ -54,6 +51,7 @@ impl ApiResponse {
         }
     }
 
+    #[allow(unused)]
     pub(crate) fn forbidden(response: ResponseBodyGeneric) -> ApiResponse {
         ApiResponse {
             headers: vec![(r#"Clear-Site-Data"#.to_string(), r#""*""#.to_string())],

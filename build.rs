@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::io::prelude::*;
 
-const std_cfg: &str = 
+const STD_CFG: &str = 
 r#"# Config File, generated at build time.
 # true, if this runs as a CORS API only. If true, ZK will host no static files and will allow CORS headers, as well as OPTIONS request methods.
 # Also, see that X-Frame-Options is set to deny on all requests to avoid clickjacking attacks. Recommended are also gzip compression & cache-control & CSRF practices.
@@ -20,7 +20,7 @@ hostname = "localhost"
 # Start password for the "admin" user
 admin_password = """#;
 
-const rocket_cfg: &str = 
+const ROCKET_CFG: &str = 
 r#"# Config File, generated at build time.
 [development]
 address = "localhost"
@@ -60,14 +60,14 @@ fn main() {
     println!("cargo:warning=CARGO_MANIFEST_DIR is {:?}", env::var("CARGO_MANIFEST_DIR").unwrap());
     println!("cargo:warning=PROFILE is {:?}", env::var("PROFILE").unwrap());
 
-    let mut output_path = get_output_path();
+    let output_path = get_output_path();
     println!("cargo:warning=Calculated build path: {}", output_path.to_str().unwrap());
 
     // Export ZK.toml
     let mut destfile = File::create(Path::new(&output_path).join("ZK.toml")).expect("Error writing config file!");
     let mut devfile = File::create(Path::new(&env::current_dir().unwrap()).join("ZK.toml")).unwrap();
-    let res = destfile.write_all(std_cfg.as_bytes());
-    let res2 = devfile.write_all(std_cfg.as_bytes());
+    let res = destfile.write_all(STD_CFG.as_bytes());
+    let res2 = devfile.write_all(STD_CFG.as_bytes());
     print!("cargo:warning={:?}",res);
     print!("cargo:warning={:?}",res2);
 
@@ -75,8 +75,8 @@ fn main() {
     // Export Rocket.toml
     let mut destfile = File::create(Path::new(&output_path).join("Rocket.toml")).expect("Error writing config file!");
     let mut devfile = File::create(Path::new(&env::current_dir().unwrap()).join("Rocket.toml")).unwrap();
-    let res = destfile.write_all(rocket_cfg.as_bytes());
-    let res2 = devfile.write_all(rocket_cfg.as_bytes());
+    let res = destfile.write_all(ROCKET_CFG.as_bytes());
+    let res2 = devfile.write_all(ROCKET_CFG.as_bytes());
     print!("cargo:warning={:?}",res);
     print!("cargo:warning={:?}",res2);
 

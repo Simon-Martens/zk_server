@@ -6,20 +6,15 @@ use crate::requestguards::CSRFClaims;
 use crate::responders::ApiResponse;
 use crate::routes_get::api;
 use crate::functions::check_claims_csrf;
-use crate::serializables::AppState;
 use crate::serializables::Claims;
-use crate::serializables::DataType;
 use crate::serializables::ResponseBodyGeneric;
 use crate::state::ApiKey;
 use crate::state::ZKConfig;
 use crate::tokens::issue_token;
-use crypto_hashes::sha2::{Digest, Sha256, Sha512};
 use rocket::http::Cookie;
 use rocket::http::Cookies;
-use rocket::http::Status;
 use rocket::State;
 use rocket_contrib::json::Json;
-use std::path::Path;
 use std::path::PathBuf;
 
 // All routes mounted at api base Path
@@ -28,7 +23,7 @@ use std::path::PathBuf;
 pub(crate) fn auth_index(
     message: Json<AuthAttempt>,
     csrf: Result<CSRFClaims, AuthError>,
-    mut cookies: Cookies,
+    cookies: Cookies,
     apikey: State<ApiKey>,
     consts: State<ZKConfig>,
 ) -> ApiResponse {
@@ -62,6 +57,7 @@ pub(crate) fn auth(
     return api(path, Ok(claims), consts, apikey);
 }
 
+#[allow(unused)] // TODO: Implement creation
 #[post("/?new", format = "json", data = "<message>")]
 pub(crate) fn create_index(
     csrf: Result<CSRFClaims, AuthError>,
@@ -73,6 +69,7 @@ pub(crate) fn create_index(
     create("./".into(), csrf, claims, message, apikey, consts)
 }
 
+#[allow(unused)] // TODO: Implement creation
 #[post("/<path..>?new", format = "json", data = "<message>")]
 pub(crate) fn create(
     path: PathBuf,

@@ -1,7 +1,6 @@
 use crypto_hashes::sha2::Sha256;
 use hmac::crypto_mac::Output;
 use hmac::Hmac;
-use std::sync::atomic::AtomicUsize;
 
 type HmacSha256 = Output<Hmac<Sha256>>;
 

@@ -1,13 +1,10 @@
 use crate::filesystem_interact::ls;
 use crate::filesystem_interact::open;
-use crate::filesystem_interact::Directory;
 use crate::filesystem_interact::Entry;
 use crate::filesystem_interact::FType;
 use crate::functions::check_claims_csrf;
 use crate::functions::handle_jwt_error;
-use crate::git_interact::RepositoryTransaction;
 use crate::requestguards::AuthError;
-use crate::requestguards::CSRFClaims;
 use crate::responders::ApiResponse;
 use crate::serializables::AppState;
 use crate::serializables::Claims;
@@ -16,8 +13,6 @@ use crate::serializables::ResponseBodyGeneric;
 use crate::state::ApiKey;
 use crate::state::ZKConfig;
 use rocket::State;
-use std::ffi::OsString;
-use std::path::Path;
 use std::path::PathBuf;
 
 // All Routes mounted at API base path
@@ -58,7 +53,7 @@ fn handle_dir_file(
             FType::Directory => handle_directory(path, e, claims, key, basepath),
         }
     } else {
-        handle_invalid_path(path, claims, consts, key)
+        handle_invalid_path(path, claims, key)
     }
 }
 
@@ -97,7 +92,6 @@ fn handle_markdown_file(
 fn handle_invalid_path(
     path: PathBuf,
     claims: Claims,
-    consts: State<ZKConfig>,
     key: State<ApiKey>,
 ) -> ApiResponse {
     let res = ResponseBodyGeneric::default()

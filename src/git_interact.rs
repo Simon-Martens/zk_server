@@ -1,5 +1,5 @@
 use chrono::prelude::*;
-use git2::{Commit, Error, ObjectType, Oid, Repository, RepositoryInitMode, Signature};
+use git2::{Commit, Error, ObjectType, Oid, Repository, Signature};
 use std::path::Path;
 
 #[derive(Serialize, Debug)]
@@ -10,11 +10,15 @@ pub(crate) struct CommitData {
     message: String,
 }
 
+#[allow(unused)] // TODO: GIT INTEGRATION
+#[allow(dead_code)]
 pub(crate) struct RepositoryTransaction {
     path: String,
     repo: Repository,
 }
 
+#[allow(unused)] // TODO: GIT INTEGRATION
+#[allow(dead_code)]
 impl RepositoryTransaction {
     pub(crate) fn from(path: &str) -> Result<Self, Error> {
         match open_repository(path) {

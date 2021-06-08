@@ -6,7 +6,7 @@ pub(crate) fn options_mainpage() -> Status {
     Status::Ok
 }
 
-#[options("/<path..>")]
-pub(crate) fn options(path: PathBuf) -> Status {
+#[options("/<_param..>")]
+pub(crate) fn options(_param: PathBuf) -> Status {
     Status::Ok
 }

@@ -6,6 +6,7 @@ pub(crate) struct AuthAttempt {
     pub(crate) password: String,
 }
 
+#[allow(dead_code)] // TODO: Implement
 #[derive(Deserialize)]
 pub(crate) struct CreateAttempt {
     ftype: FType,

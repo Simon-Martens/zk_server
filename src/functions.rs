@@ -2,9 +2,7 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::Hash;
 use std::hash::Hasher;
 use std::path::PathBuf;
-
 use rocket::State;
-
 use crate::requestguards::AuthError;
 use crate::requestguards::CSRFClaims;
 use crate::responders::ApiResponse;
@@ -15,6 +13,7 @@ use crate::state::ApiKey;
 use crate::state::ZKConfig;
 
 // Helpers
+#[allow(dead_code)] // Will be needed eventually... Implement it using SHA-2 for file names
 fn calculate_id<T: Hash>(t: &T) -> u64 {
     let salt: u64 = rand::random();
     let mut s = DefaultHasher::new();
@@ -40,10 +39,11 @@ pub(crate) fn handle_jwt_error(
     error: &AuthError,
 ) -> ApiResponse {
     // TODO MATCH MESSAGE TO AUTH ERROR
-    let mut res = ResponseBodyGeneric::default().set_apiurl(
-        path.to_str().unwrap_or_default(),
-        &key,
-        &Claims::default().set_iss(consts.hostname.as_str()),
+    let res = ResponseBodyGeneric::default()
+        .set_apiurl(
+            path.to_str().unwrap_or_default(),
+            &key,
+            &Claims::default().set_iss(consts.hostname.as_str()),
     );
     let res = match error {
         AuthError::UsernameInvalidated => res.set_inner(

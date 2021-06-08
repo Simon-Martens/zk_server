@@ -60,7 +60,7 @@ fn main() {
         .attach(fairings::Gzip)
         .attach(fairings::Caching)
         .attach(fairings::XClacksOverhead)
-        .attach(fairings::X_Frame_Options)
+        .attach(fairings::XFRameOptions)
         .launch();
 }
 

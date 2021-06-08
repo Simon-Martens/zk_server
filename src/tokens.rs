@@ -26,7 +26,7 @@ pub(crate) fn validate_token(
     key: &ApiKey,
     consts: &State<ZKConfig>,
 ) -> Result<TokenData<Claims>, jsonwebtoken::errors::Error> {
-    let mut validation = Validation {
+    let validation = Validation {
         leeway: 180,
         validate_nbf: true,
         validate_exp: true,
