@@ -16,4 +16,5 @@ pub(crate) struct ZKConfig {
     pub(crate) repo_files_location: String,
     pub(crate) hostname: String,
     pub(crate) admin_password: String,
+    pub(crate) path: String,
 }

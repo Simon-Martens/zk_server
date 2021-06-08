@@ -4,6 +4,7 @@ use crate::filesystem_interact::Entry;
 use crate::filesystem_interact::FType;
 use crate::functions::check_claims_csrf;
 use crate::functions::handle_jwt_error;
+use crate::requestguards::APIPath;
 use crate::requestguards::AuthError;
 use crate::responders::ApiResponse;
 use crate::serializables::AppState;
@@ -22,20 +23,20 @@ pub(crate) fn api_index(
     consts: State<ZKConfig>,
     key: State<ApiKey>,
 ) -> ApiResponse {
-    api("./".into(), claims, consts, key)
+    api(APIPath("./".into()), claims, consts, key)
 }
 
 #[get("/<path..>", format = "json", rank = 1)]
 pub(crate) fn api(
-    path: PathBuf,
+    path: APIPath,
     claims: Result<Claims, AuthError>,
     consts: State<ZKConfig>,
     key: State<ApiKey>,
 ) -> ApiResponse {
     if let Some(e) = check_claims_csrf(&claims, None) {
-        handle_jwt_error(path, consts, key, e)
+        handle_jwt_error(path.0, consts, key, e)
     } else {
-        handle_dir_file(path, claims.unwrap(), consts, key)
+        handle_dir_file(path.0, claims.unwrap(), consts, key)
     }
 }
 
