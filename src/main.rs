@@ -41,15 +41,6 @@ mod tokens;
 
 fn main() {
     rocket::ignite()
-        .mount(
-            "/api", // TODO: Allow setting this in ZK.toml
-            routes![
-                routes_get::api,
-                routes_get::api_index,
-                routes_post::auth,
-                routes_post::auth_index
-            ],
-        )
         .attach(AdHoc::on_attach("Generate Secret", |rocket| {
             Ok(rocket.manage(state::ApiKey(generate_hmac().finalize())))
         }))
@@ -99,5 +90,14 @@ fn parse_options(rocket: rocket::Rocket) -> rocket::Rocket {
             routes![routes_static_get::app, routes_static_get::static_or_app,],
         ),
     };
-    return rocket.manage(config);
+    let rocket = rocket.mount(
+        config.path.as_str(), // TODO: Allow setting this in ZK.toml
+        routes![
+            routes_get::api,
+            routes_get::api_index,
+            routes_post::auth,
+            routes_post::auth_index
+        ],
+    );
+    rocket.manage(config)
 }
