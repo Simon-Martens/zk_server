@@ -1,6 +1,7 @@
 use crate::deserializables::AuthAttempt;
 use crate::deserializables::CreateAttempt;
 use crate::functions::handle_jwt_error;
+use crate::requestguards::APIPath;
 use crate::requestguards::AuthError;
 use crate::requestguards::CSRFClaims;
 use crate::responders::ApiResponse;
@@ -59,7 +60,7 @@ pub(crate) fn auth(
         "jwt",
         issue_token(&claims, apikey.inner()).unwrap(),
     ));
-    return api(path, Ok(claims), consts, apikey);
+    return api(APIPath(path), Ok(claims), consts, apikey);
 }
 
 #[post("/?new", format = "json", data = "<message>")]

@@ -4,6 +4,7 @@ use crate::state::ZKConfig;
 use crate::tokens::validate_token;
 use jsonwebtoken::errors::Error;
 use rocket::http::Status;
+use rocket::http::uri::SegmentError;
 use rocket::http::uri::Segments;
 use rocket::request::FromRequest;
 use rocket::request::Outcome;
@@ -80,4 +81,15 @@ impl<'a, 'r> FromRequest<'a, 'r> for CSRFClaims {
             }
         }
     }
+}
+
+pub(crate) struct APIPath(pub(crate) PathBuf);
+
+impl<'a> FromSegments<'a> for APIPath {
+    fn from_segments(segments: Segments<'a>) -> Result<Self, Self::Error> {
+        let ret = segments.into_path_buf(true)?;
+        Ok(APIPath(ret))
+    }
+
+    type Error = SegmentError;
 }
