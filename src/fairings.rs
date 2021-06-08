@@ -90,20 +90,22 @@ impl Fairing for CORS {
     }
 
     fn on_response(&self, _: &Request, response: &mut Response) {
-            response.set_header(Header::new(
-                "Access-Control-Allow-Origin",
-                self.origin.clone(),
-            ));
-            response.set_header(Header::new(
-                "Access-Control-Allow-Methods",
-                "POST, GET, PUT, POST, PATCH, OPTIONS",
-            ));
-            response.set_header(Header::new("Access-Control-Max-Age", "86400"));
-            response.set_header(Header::new("Access-Control-Allow-Headers", "Cookie, Content-Type"));
-            response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));     
+        response.set_header(Header::new(
+            "Access-Control-Allow-Origin",
+            self.origin.clone(),
+        ));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Methods",
+            "POST, GET, PUT, POST, PATCH, OPTIONS",
+        ));
+        response.set_header(Header::new("Access-Control-Max-Age", "86400"));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Headers",
+            "Cookie, Content-Type",
+        ));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }
 }
-
 
 pub(crate) struct XFRameOptions;
 
@@ -121,10 +123,7 @@ impl Fairing for XFRameOptions {
             .get("Accept-Encoding")
             .any(|e| e.to_lowercase().contains("gzip"))
         {
-            response.set_header(Header::new(
-                "X-Frame-Options",
-                "deny",
-            ));
+            response.set_header(Header::new("X-Frame-Options", "deny"));
         }
     }
 }

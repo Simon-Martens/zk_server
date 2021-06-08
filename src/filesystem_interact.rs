@@ -1,9 +1,8 @@
+use rocket_contrib::json::JsonValue;
 use std::fs::read_dir;
 use std::fs::DirEntry;
 use std::io;
 use std::path::PathBuf;
-use rocket_contrib::json::JsonValue;
-
 
 #[derive(Serialize)]
 pub(crate) struct Directory {
@@ -12,7 +11,6 @@ pub(crate) struct Directory {
     dirs: Vec<Entry>,
 }
 
- 
 #[derive(Serialize, Deserialize)]
 pub(crate) enum FType {
     MDFile,
@@ -41,7 +39,12 @@ impl Directory {
 }
 
 #[allow(unused_variables)] // TODO: Fiter implement
-pub(crate) fn ls(entry: Entry, basepath: &PathBuf, hidden: bool, filter: &str) -> io::Result<Directory> {
+pub(crate) fn ls(
+    entry: Entry,
+    basepath: &PathBuf,
+    hidden: bool,
+    filter: &str,
+) -> io::Result<Directory> {
     let mut mds: Vec<Entry> = Vec::new();
     let mut dirs: Vec<Entry> = Vec::new();
     for entry in read_dir(&entry.data)?
@@ -50,14 +53,21 @@ pub(crate) fn ls(entry: Entry, basepath: &PathBuf, hidden: bool, filter: &str) -
         .filter(|e| !(is_hidden(&e) ^ hidden))
     {
         let path = entry.path();
-        if let Some(e) = open(&path.strip_prefix(&basepath).unwrap().to_path_buf(), &basepath) {
+        if let Some(e) = open(
+            &path.strip_prefix(&basepath).unwrap().to_path_buf(),
+            &basepath,
+        ) {
             match e.ftype {
                 FType::MDFile => mds.push(e),
                 FType::Directory => dirs.push(e),
             }
         }
     }
-    Ok(Directory { head: entry, mds, dirs })
+    Ok(Directory {
+        head: entry,
+        mds,
+        dirs,
+    })
 }
 
 pub(crate) fn open(url: &PathBuf, basepath: &PathBuf) -> Option<Entry> {
@@ -74,13 +84,13 @@ pub(crate) fn open(url: &PathBuf, basepath: &PathBuf) -> Option<Entry> {
             data: e,
             name: filename,
             ftype: FType::Directory,
-            url: url.clone()
+            url: url.clone(),
         }),
         e if e.is_file() && e.extension().unwrap_or_default() == "md" => Some(Entry {
             data: e,
             name: filename,
             ftype: FType::MDFile,
-            url: url.clone()
+            url: url.clone(),
         }),
         _ => None,
     }

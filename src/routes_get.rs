@@ -90,11 +90,7 @@ fn handle_markdown_file(
     ApiResponse::ok(res)
 }
 
-fn handle_invalid_path(
-    path: PathBuf,
-    claims: Claims,
-    key: State<ApiKey>,
-) -> ApiResponse {
+fn handle_invalid_path(path: PathBuf, claims: Claims, key: State<ApiKey>) -> ApiResponse {
     let res = ResponseBodyGeneric::default()
         .set_apiurl(path.to_str().unwrap_or_default(), &key, &claims)
         .set_inner(

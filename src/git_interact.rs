@@ -53,13 +53,13 @@ impl RepositoryTransaction {
             .map_err(|_| git2::Error::from_str("Couldn't find commit"))?;
         let tree = self.repo.find_tree(oid)?;
         self.repo.commit(
-            Some("HEAD"), //  point HEAD to our new commit
-            &signature,   // author
-            &signature,   // committer
-            message,      // commit message
-            &tree,        // tree
+            Some("HEAD"),      //  point HEAD to our new commit
+            &signature,        // author
+            &signature,        // committer
+            message,           // commit message
+            &tree,             // tree
             &[&parent_commit], // parents
-        ) 
+        )
     }
 }
 
