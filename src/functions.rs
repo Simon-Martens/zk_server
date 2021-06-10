@@ -7,6 +7,7 @@ use crate::serializables::ResponseBodyGeneric;
 use crate::state::ApiKey;
 use crate::state::ZKConfig;
 use rocket::State;
+use rocket::serde::json::serde_json::json;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hash;
 use std::hash::Hasher;
@@ -37,8 +38,8 @@ pub(crate) fn check_claims_csrf<'a>(
 
 pub(crate) fn handle_jwt_error(
     path: PathBuf,
-    consts: State<ZKConfig>,
-    key: State<ApiKey>,
+    consts: &State<ZKConfig>,
+    key: &State<ApiKey>,
     error: &AuthError,
 ) -> ApiResponse {
     // TODO MATCH MESSAGE TO AUTH ERROR

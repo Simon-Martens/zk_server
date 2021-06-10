@@ -1,9 +1,5 @@
-#![feature(proc_macro_hygiene, decl_macro)]
-#![feature(ptr_metadata)]
 #[macro_use]
 extern crate rocket;
-#[macro_use]
-extern crate rocket_contrib;
 #[macro_use]
 extern crate serde_derive;
 
@@ -18,7 +14,7 @@ use hmac::Mac;
 use hmac::NewMac;
 use rand;
 use rand::Rng;
-use rocket::fairing::AdHoc;
+use rocket::{Build, Ignite, build, fairing::AdHoc};
 
 mod deserializables;
 mod fairings;
@@ -39,20 +35,18 @@ mod serializables;
 mod state;
 mod tokens;
 
-fn main() {
-    rocket::ignite()
-        .attach(AdHoc::on_attach("Generate Secret", |rocket| {
-            Ok(rocket.manage(state::ApiKey(generate_hmac().finalize())))
-        }))
-        .attach(AdHoc::on_attach("Parse options", |rocket| {
-            Ok(parse_options(rocket))
-        }))
-        .register(catchers![routes_catchers::not_found])
+#[launch]
+fn rocket() -> _ { 
+    rocket::build()
+        .attach(AdHoc::on_ignite("Parse options", |rocket| Box::pin(async move {
+            parse_options(rocket)
+        })))
+        .manage(state::ApiKey(generate_hmac().finalize()))
+        .register("/", catchers![routes_catchers::not_found])
         .attach(fairings::Gzip)
         .attach(fairings::Caching)
         .attach(fairings::XClacksOverhead)
         .attach(fairings::XFRameOptions)
-        .launch();
 }
 
 fn read_config() -> ZKConfig {
@@ -68,7 +62,7 @@ fn generate_hmac() -> Hmac<Sha256> {
         .expect("Failed to generate Secret. Aborting.");
 }
 
-fn parse_options(rocket: rocket::Rocket) -> rocket::Rocket {
+fn parse_options(rocket: rocket::Rocket<Build>) -> rocket::Rocket<Build> {
     let config = read_config();
     let rocket = match config.cors {
         true => rocket

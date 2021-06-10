@@ -7,7 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rocket = "0.4"
 serde = "1.0"
 serde_derive = "1.0"
 rand = "0.8.3" 
@@ -20,11 +19,7 @@ figment = { version = "0.10", default-features = false, features = ["toml", "env
 git2 = "0.13"
 filetime = "0.2"
 hex = "0.4"
-
-[dependencies.rocket_contrib]
-version = "0.4.10"
-default-features = false
-features = ["json"]
+rocket = { version = "0.5.0-rc.1", features = ["secrets", "tls", "json"] }
 
 [dependencies.flate2]
 version = "0.2"

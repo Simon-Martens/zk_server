@@ -13,8 +13,8 @@ pub(crate) struct ApiResponse {
     status: Status,
 }
 
-impl<'r> Responder<'r> for ApiResponse {
-    fn respond_to(self, req: &Request) -> Result<'r> {
+impl<'r, 'o: 'r> Responder<'r, 'o> for ApiResponse {
+    fn respond_to(self, req: &'r Request<'_>) -> Result<'o> {
         let mut res = Response::build_from(self.response.json().respond_to(&req).unwrap())
             .status(self.status)
             .header(ContentType::JSON)

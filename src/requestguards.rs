@@ -3,7 +3,8 @@ use crate::state::ApiKey;
 use crate::state::ZKConfig;
 use crate::tokens::validate_token;
 use jsonwebtoken::errors::Error;
-use rocket::http::uri::SegmentError;
+use rocket::http::uri::error::PathError;
+use rocket::http::uri::fmt::Path;
 use rocket::http::uri::Segments;
 use rocket::http::Status;
 use rocket::request::FromRequest;
@@ -23,10 +24,11 @@ pub(crate) enum AuthError {
     JWTError(Error),
 }
 
-impl<'a, 'r> FromRequest<'a, 'r> for Claims {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Claims {
     type Error = AuthError;
 
-    fn from_request(request: &'a Request<'r>) -> Outcome<Self, Self::Error> {
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let keys: Option<String> = request
             .cookies()
             .get_private("jwt")
@@ -34,8 +36,8 @@ impl<'a, 'r> FromRequest<'a, 'r> for Claims {
         if keys == None {
             return Outcome::Failure((Status::Unauthorized, AuthError::Missing));
         }
-        let apikey = request.guard::<State<ApiKey>>();
-        let consts = request.guard::<State<ZKConfig>>();
+        let apikey = request.guard::<&State<ApiKey>>().await;
+        let consts = request.guard::<&State<ZKConfig>>().await;
         let validation = validate_token(&keys.unwrap(), &apikey.unwrap(), &consts.unwrap());
         match validation {
             Err(e) => Outcome::Failure((Status::Unauthorized, AuthError::JWTError(e))),
@@ -44,8 +46,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for Claims {
                 {
                     return Outcome::Failure((Status::Forbidden, AuthError::PathTraversalAttempt));
                 }
-                let cfg = request.guard::<State<ZKConfig>>().unwrap();
-                let mut path = PathBuf::from(&cfg.repo_files_location);
+                let mut path = PathBuf::from(consts.unwrap().repo_files_location.clone());
                 path.push(n.claims.get_sub());
                 if !path.exists() {
                     return Outcome::Failure((Status::Forbidden, AuthError::UsernameInvalidated));
@@ -58,16 +59,17 @@ impl<'a, 'r> FromRequest<'a, 'r> for Claims {
 
 pub(crate) struct CSRFClaims(Claims);
 
-impl<'a, 'r> FromRequest<'a, 'r> for CSRFClaims {
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for CSRFClaims {
     type Error = AuthError;
 
-    fn from_request(request: &'a Request<'r>) -> Outcome<Self, Self::Error> {
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         let keys: Option<&str> = request.headers().get_one("XSRF-TOKEN");
         if keys == None {
             return Outcome::Failure((Status::Unauthorized, AuthError::Missing));
         }
-        let apikey = request.guard::<State<ApiKey>>();
-        let consts = request.guard::<State<ZKConfig>>();
+        let apikey = request.guard::<&State<ApiKey>>().await;
+        let consts = request.guard::<&State<ZKConfig>>().await;
         let validation = validate_token(
             &keys.unwrap().to_string(),
             &apikey.unwrap(),
@@ -85,11 +87,10 @@ impl<'a, 'r> FromRequest<'a, 'r> for CSRFClaims {
 
 pub(crate) struct APIPath(pub(crate) PathBuf);
 
-impl<'a> FromSegments<'a> for APIPath {
-    fn from_segments(segments: Segments<'a>) -> Result<Self, Self::Error> {
-        let ret = segments.into_path_buf(true)?;
+impl<'r> FromSegments<'r> for APIPath {
+    type Error = PathError;
+    fn from_segments(segments: Segments<'r, Path>) -> Result<Self, Self::Error> {
+        let ret: PathBuf = segments.to_path_buf(true)?;
         Ok(APIPath(ret))
     }
-
-    type Error = SegmentError;
 }

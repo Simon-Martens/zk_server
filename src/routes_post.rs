@@ -13,32 +13,33 @@ use crate::state::ApiKey;
 use crate::state::ZKConfig;
 use crate::tokens::issue_token;
 use rocket::http::Cookie;
-use rocket::http::Cookies;
+use rocket::http::CookieJar;
+use rocket::serde::json::Json;
+use rocket::serde::json::Value;
 use rocket::State;
-use rocket_contrib::json::Json;
 use std::path::PathBuf;
 
 // All routes mounted at api base Path
 
 #[post("/?auth", format = "json", data = "<message>")]
-pub(crate) fn auth_index(
+pub(crate) fn auth_index<'a>(
     message: Json<AuthAttempt>,
     csrf: Result<CSRFClaims, AuthError>,
-    cookies: Cookies,
-    apikey: State<ApiKey>,
-    consts: State<ZKConfig>,
+    cookies: &'a CookieJar,
+    apikey: &State<ApiKey>,
+    consts: &State<ZKConfig>,
 ) -> ApiResponse {
     auth("./".into(), message, csrf, cookies, apikey, consts)
 }
 
 #[post("/<path..>?auth", format = "json", data = "<message>")]
-pub(crate) fn auth(
+pub(crate) fn auth<'a>(
     path: PathBuf,
     message: Json<AuthAttempt>,
     csrf: Result<CSRFClaims, AuthError>,
-    mut cookies: Cookies,
-    apikey: State<ApiKey>,
-    consts: State<ZKConfig>,
+    mut cookies: &'a CookieJar,
+    apikey: &State<ApiKey>,
+    consts: &State<ZKConfig>,
 ) -> ApiResponse {
     if csrf.is_err() {
         return handle_jwt_error(path, consts, apikey, &csrf.err().unwrap());
@@ -64,8 +65,8 @@ pub(crate) fn create_index(
     csrf: Result<CSRFClaims, AuthError>,
     claims: Result<Claims, AuthError>,
     message: Json<CreateAttempt>,
-    apikey: State<ApiKey>,
-    consts: State<ZKConfig>,
+    apikey: &State<ApiKey>,
+    consts: &State<ZKConfig>,
 ) -> ApiResponse {
     create("./".into(), csrf, claims, message, apikey, consts)
 }
@@ -77,8 +78,8 @@ pub(crate) fn create(
     csrf: Result<CSRFClaims, AuthError>,
     claims: Result<Claims, AuthError>,
     message: Json<CreateAttempt>,
-    apikey: State<ApiKey>,
-    consts: State<ZKConfig>,
+    apikey: &State<ApiKey>,
+    consts: &State<ZKConfig>,
 ) -> ApiResponse {
     if let Some(e) = check_claims_csrf(&claims, Some(&csrf)) {
         handle_jwt_error(path, consts, apikey, e)

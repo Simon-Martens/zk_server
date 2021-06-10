@@ -14,14 +14,18 @@ use crate::serializables::ResponseBodyGeneric;
 use crate::state::ApiKey;
 use crate::state::ZKConfig;
 use rocket::State;
+use rocket::serde::json::serde_json::json;
+use rocket::serde::Serialize;
+use rocket::serde::json::Json;
+use rocket::serde::json::Value;
 use std::path::PathBuf;
 
 // All Routes mounted at API base path
 #[get("/", format = "json", rank = 2)]
 pub(crate) fn api_index(
     claims: Result<Claims, AuthError>,
-    consts: State<ZKConfig>,
-    key: State<ApiKey>,
+    consts: &State<ZKConfig>,
+    key: &State<ApiKey>,
 ) -> ApiResponse {
     api(APIPath("./".into()), claims, consts, key)
 }
@@ -30,8 +34,8 @@ pub(crate) fn api_index(
 pub(crate) fn api(
     path: APIPath,
     claims: Result<Claims, AuthError>,
-    consts: State<ZKConfig>,
-    key: State<ApiKey>,
+    consts: &State<ZKConfig>,
+    key: &State<ApiKey>,
 ) -> ApiResponse {
     if let Some(e) = check_claims_csrf(&claims, None) {
         handle_jwt_error(path.0, consts, key, e)
@@ -43,8 +47,8 @@ pub(crate) fn api(
 fn handle_dir_file(
     path: PathBuf,
     claims: Claims,
-    consts: State<ZKConfig>,
-    key: State<ApiKey>,
+    consts: &State<ZKConfig>,
+    key: &State<ApiKey>,
 ) -> ApiResponse {
     let mut basepath = PathBuf::from(&consts.repo_files_location);
     basepath.push(claims.get_sub());
@@ -62,7 +66,7 @@ fn handle_directory(
     path: PathBuf,
     dir: Entry,
     claims: Claims,
-    key: State<ApiKey>,
+    key: &State<ApiKey>,
     basepath: PathBuf,
 ) -> ApiResponse {
     let res = ResponseBodyGeneric::default()
@@ -80,7 +84,7 @@ fn handle_markdown_file(
     path: PathBuf,
     mdfile: Entry,
     claims: Claims,
-    key: State<ApiKey>,
+    key: &State<ApiKey>,
 ) -> ApiResponse {
     let res = ResponseBodyGeneric::default()
         .set_apiurl(path.to_str().unwrap_or_default(), &key, &claims)
@@ -90,7 +94,7 @@ fn handle_markdown_file(
     ApiResponse::ok(res)
 }
 
-fn handle_invalid_path(path: PathBuf, claims: Claims, key: State<ApiKey>) -> ApiResponse {
+fn handle_invalid_path(path: PathBuf, claims: Claims, key: &State<ApiKey>) -> ApiResponse {
     let res = ResponseBodyGeneric::default()
         .set_apiurl(path.to_str().unwrap_or_default(), &key, &claims)
         .set_inner(

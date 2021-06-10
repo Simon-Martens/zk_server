@@ -8,7 +8,8 @@ use chrono::Local;
 use chrono::Timelike;
 use chrono::Utc;
 use crypto_hashes::sha2::{Digest, Sha256};
-use rocket_contrib::json::JsonValue;
+use rocket::serde::json::Value;
+use rocket::serde::json::serde_json::json;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -139,7 +140,7 @@ pub(crate) struct ResponseBodyGeneric {
     url: String,           // Url of the Request for Permalink & History
     history: bool,         // true, if this page will be added to history
     apiurl: String,        // Api-URL of the Request
-    inner: JsonValue,      // Inner Json
+    inner: Value,      // Inner Json
     datatype: DataType,
     appstate: AppState, // State of the reository
 }
@@ -147,13 +148,13 @@ pub(crate) struct ResponseBodyGeneric {
 impl Default for ResponseBodyGeneric {
     fn default() -> Self {
         let mut hasher = Sha256::new();
-        hasher.update(JsonValue::default().0.to_string().as_bytes());
+        hasher.update(Value::default().to_string().as_bytes());
         Self {
             datatype: DataType::Empty,
             hash: format!("{:x}", hasher.finalize()),
             url: String::default(),
             history: false,
-            inner: JsonValue::default(),
+            inner: Value::default(),
             token: None,
             apiurl: String::default(),
             appstate: AppState::default(),
@@ -162,9 +163,9 @@ impl Default for ResponseBodyGeneric {
 }
 
 impl ResponseBodyGeneric {
-    pub(crate) fn set_inner(mut self, json: JsonValue, datatype: DataType) -> Self {
+    pub(crate) fn set_inner(mut self, json: Value, datatype: DataType) -> Self {
         let mut hasher = Sha256::new();
-        hasher.update(json.0.to_string().as_bytes());
+        hasher.update(json.to_string().as_bytes());
 
         self.inner = json;
         self.datatype = datatype;
@@ -193,7 +194,7 @@ impl ResponseBodyGeneric {
         self
     }
 
-    pub(crate) fn json(&self) -> JsonValue {
+    pub(crate) fn json(&self) -> Value {
         json!(self)
     }
 }

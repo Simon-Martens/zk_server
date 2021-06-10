@@ -1,4 +1,5 @@
-use rocket_contrib::json::JsonValue;
+use rocket::serde::json::Value;
+use rocket::serde::json::serde_json::json;
 use std::fs::read_dir;
 use std::fs::DirEntry;
 use std::io;
@@ -27,13 +28,13 @@ pub(crate) struct Entry {
 }
 
 impl Entry {
-    pub(crate) fn json(&self) -> JsonValue {
+    pub(crate) fn json(&self) -> Value {
         json!(self)
     }
 }
 
 impl Directory {
-    pub(crate) fn json(&self) -> JsonValue {
+    pub(crate) fn json(&self) -> Value {
         json!(self)
     }
 }
