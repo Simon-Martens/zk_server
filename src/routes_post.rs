@@ -15,7 +15,6 @@ use crate::tokens::issue_token;
 use rocket::http::Cookie;
 use rocket::http::CookieJar;
 use rocket::serde::json::Json;
-use rocket::serde::json::Value;
 use rocket::State;
 use std::path::PathBuf;
 
@@ -37,7 +36,7 @@ pub(crate) fn auth<'a>(
     path: PathBuf,
     message: Json<AuthAttempt>,
     csrf: Result<CSRFClaims, AuthError>,
-    mut cookies: &'a CookieJar,
+    cookies: &'a CookieJar,
     apikey: &State<ApiKey>,
     consts: &State<ZKConfig>,
 ) -> ApiResponse {

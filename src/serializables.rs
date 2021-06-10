@@ -8,8 +8,8 @@ use chrono::Local;
 use chrono::Timelike;
 use chrono::Utc;
 use crypto_hashes::sha2::{Digest, Sha256};
-use rocket::serde::json::Value;
 use rocket::serde::json::serde_json::json;
+use rocket::serde::json::Value;
 use serde::Serialize;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -140,7 +140,7 @@ pub(crate) struct ResponseBodyGeneric {
     url: String,           // Url of the Request for Permalink & History
     history: bool,         // true, if this page will be added to history
     apiurl: String,        // Api-URL of the Request
-    inner: Value,      // Inner Json
+    inner: Value,          // Inner Json
     datatype: DataType,
     appstate: AppState, // State of the reository
 }

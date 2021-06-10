@@ -28,11 +28,10 @@ impl Fairing for Gzip {
             response.body_mut().to_bytes().await.and_then(|body| {
                 let mut enc = body.gz_encode(Compression::Default);
                 let mut buf: Vec<u8> = Vec::with_capacity(body.len());
-                enc.read_to_end(&mut buf)
-                    .map(|s| {
-                        response.set_sized_body(s, Cursor::new(buf));
-                        response.set_raw_header("Content-Encoding", "gzip");
-                    });
+                enc.read_to_end(&mut buf).map(|s| {
+                    response.set_sized_body(s, Cursor::new(buf));
+                    response.set_raw_header("Content-Encoding", "gzip");
+                });
                 Ok(body)
             });
         }
@@ -50,7 +49,7 @@ impl Fairing for XClacksOverhead {
         }
     }
 
-    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+    async fn on_response<'r>(&self, _: &'r Request<'_>, response: &mut Response<'r>) {
         response.set_header(Header::new("X-Clacks-Overhead", "GNU Terry Pratchett"));
     }
 }
@@ -66,7 +65,7 @@ impl Fairing for Caching {
         }
     }
 
-    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+    async fn on_response<'r>(&self, _: &'r Request<'_>, response: &mut Response<'r>) {
         if response.content_type() == Some(ContentType::JavaScript)
             || response.content_type() == Some(ContentType::CSS)
             || response.content_type() == Some(ContentType::Icon)
@@ -92,7 +91,7 @@ impl Fairing for CORS {
         }
     }
 
-    async fn on_response<'r>(&self, request: &'r Request<'_>, response: &mut Response<'r>) {
+    async fn on_response<'r>(&self, _: &'r Request<'_>, response: &mut Response<'r>) {
         response.set_header(Header::new(
             "Access-Control-Allow-Origin",
             self.origin.clone(),

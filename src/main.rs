@@ -5,17 +5,17 @@ extern crate serde_derive;
 
 use crate::state::ZKConfig;
 use crypto_hashes::sha2::Sha256;
-use figment::{
-    providers::{Env, Format, Toml},
-    Figment,
-};
+use figment::providers::Env;
+use figment::providers::Format;
+use figment::providers::Toml;
+use figment::Figment;
 use hmac::Hmac;
 use hmac::Mac;
 use hmac::NewMac;
 use rand;
 use rand::Rng;
-use rocket::{Build, Ignite, build, fairing::AdHoc};
-
+use rocket::fairing::AdHoc;
+use rocket::Build;
 mod deserializables;
 mod fairings;
 mod filesystem_interact;
@@ -36,11 +36,11 @@ mod state;
 mod tokens;
 
 #[launch]
-fn rocket() -> _ { 
+fn rocket() -> _ {
     rocket::build()
-        .attach(AdHoc::on_ignite("Parse options", |rocket| Box::pin(async move {
-            parse_options(rocket)
-        })))
+        .attach(AdHoc::on_ignite("Parse options", |rocket| {
+            Box::pin(async move { parse_options(rocket) })
+        }))
         .manage(state::ApiKey(generate_hmac().finalize()))
         .register("/", catchers![routes_catchers::not_found])
         .attach(fairings::Gzip)

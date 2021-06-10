@@ -13,11 +13,8 @@ use crate::serializables::DataType;
 use crate::serializables::ResponseBodyGeneric;
 use crate::state::ApiKey;
 use crate::state::ZKConfig;
-use rocket::State;
 use rocket::serde::json::serde_json::json;
-use rocket::serde::Serialize;
-use rocket::serde::json::Json;
-use rocket::serde::json::Value;
+use rocket::State;
 use std::path::PathBuf;
 
 // All Routes mounted at API base path
